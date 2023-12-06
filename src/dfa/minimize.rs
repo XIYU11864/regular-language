@@ -124,12 +124,12 @@ impl IndistinGroups {
     /// 假设↓指向一组不可区分状态，⇓指向另一组不可区分状态，x代表一个状态，
     /// 
     /// 在remap之前，状态列表的分布是：
-    /// ```
+    /// ```text
     ///  ↓    ↓ ↓         ⇓  ⇓
     /// xxxxxxxxxxxxxxxxxxxxxxxx
     /// ```
     /// 在remap之后，状态列表的分布是：
-    /// ```
+    /// ```text
     ///                    ↓⇓
     /// xxxxxxxxxxxxxxxxxxxxx
     /// ```

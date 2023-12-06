@@ -2,7 +2,7 @@ use super::CompletedDfa;
 
 type StateId = u128;
 
-/// 以边集的形式储存的DFA。
+/// 以边集的形式储存的DFA状态转移表。还没写完。
 struct DfaAsEdges {
     trans: Vec<Edge>,
 }

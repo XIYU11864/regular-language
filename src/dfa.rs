@@ -1,9 +1,9 @@
-use crate::nfa::{self, State as NfaState, NFA};
+use crate::nfa::NFA;
 use itertools::Itertools;
 use std::collections::{HashMap, HashSet};
 use std::fmt;
 
-mod edge;
+pub mod edge;
 pub mod minimize;
 
 /// 传入一个集合的索引的子集，返回一个无符号数来*表示*这个子集。
@@ -64,6 +64,7 @@ pub trait CompletedDfa {
     /// delta 是状态转移函数δ的读音。这个函数等价于 δ(from, input)。
     /// 也就是说，这个函数会返回从状态from经过输入input到达的状态。
     fn delta(&self, from: StateId, input: u8) -> StateId;
+
     fn to_fmt_output(&self) -> String {
         let mut output = String::from("\t0\t1\n");
         let start_state = self.start_state();
@@ -637,6 +638,13 @@ impl DenseDFA {
         self.out_transitions.trans[index]
     }
 
+    fn is_no_way_out(&self, state: StateId) -> bool {
+        self.out_transitions.trans[(state << self.out_transitions.stride_as_power_of_2) as usize
+            ..((state + 1) << self.out_transitions.stride_as_power_of_2) as usize]
+            .iter()
+            .all(|&to| to == 0)
+    }
+
     fn alphabet_index_of(&self, input: u8) -> usize {
         self.alphabet
             .to_iter()
@@ -668,6 +676,30 @@ impl DenseDFA {
                 println!("{} <- {} ({})", state_id, from, input as char);
             }
         }
+    }
+
+    /// 将这个DFA转换为正则文法。
+    pub fn to_rg(&self) -> String {
+        let mut rg = String::new();
+        rg.push_str(&format!("S -> q{}\n", self.start_state()));
+        for from in 1..self.number_of_states() {
+            // 这个变量代表产生式的右部，也就是候选式。
+            let mut candidate = String::new();
+            for input in self.alphabet.to_iter() {
+                let to = self.delta(from, input);
+                if self.accept_states.contains(&to) {
+                    candidate.push_str(&format!(" {} |", input as char));
+                }
+                if to == 0 || self.is_no_way_out(to) {
+                    continue;
+                }
+                candidate.push_str(&format!(" {}q{} |", input as char, to));
+            }
+            if let Some(_) = candidate.pop() {
+                rg.push_str(&format!("q{} ->{}\n", from, candidate));
+            }
+        }
+        rg
     }
 
     pub fn call_to_dot(&self) -> String {
@@ -725,7 +757,6 @@ impl DenseDFA {
 
         Some(minimized_dfa)
     }
-
 }
 
 impl fmt::Display for DenseDFA {

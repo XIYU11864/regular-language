@@ -1,7 +1,7 @@
 use itertools::Itertools;
 use std::{collections::HashSet, iter::FromIterator};
 
-// 这是一个正则语法解析相关的包，用于将正则表达式解析成语法树。
+// 这是一个正则语法解析相关的包，用于将正则表达式解析优化过的成语法树。
 // 语法树的节点类型在regex_syntax::hir::HirKind中定义。
 // 这个包实际上是rust语言的正则表达式库regex的一个子包，里面的算法是生产级的。
 use regex_syntax::{
@@ -18,7 +18,7 @@ pub struct NFA {
     states: Vec<State>,
     alphabet: HashSet<u8>,
     pub start_state: Option<StateId>,
-    pub accept_states: Vec<StateId>, //或者 accept_states: &[StateId]
+    pub accept_states: Vec<StateId>,
 }
 
 /// NFA内的状态的增删改查
@@ -151,7 +151,7 @@ impl NFA {
         // 由于我们的题目所构造的NFA状态数不会太多，所以暂时就用现在的结构了。
     }
 
-    // 这个函数的意义是，先求状态的闭包，然后再求从闭包中任意状态发射的所有非空转移。
+    /// 这个函数的意义是，先求状态的闭包，然后再求从闭包中任意状态发射的所有非空转移。
     fn epsilon_closure_and_dalta(&self, state: StateId) -> (Vec<StateId>, HashSet<(u8, u32)>) {
         let mut closure = Vec::new();
         let mut stack = vec![state];
@@ -214,6 +214,7 @@ impl NFA {
     //     closure
     // }
 
+    /// 以分组的形式返回某个非空转移状态的所有转移，同一个输入字符能达到的状态分到同一个组中。
     pub fn deltas(&self, state_id: StateId) -> Vec<(u8, Vec<StateId>)> {
         if let State::NonEpsilon(trans) = &self.states[state_id as usize] {
             trans
@@ -229,6 +230,7 @@ impl NFA {
         // todo!()
     }
 
+    /// 返回“delta hat"转移函数，即去除空转移后的转移函数。
     fn get_dalta_hat_transitions(&self, state: StateId) -> Vec<(u8, u32)> {
         let mut result = Vec::new();
 
