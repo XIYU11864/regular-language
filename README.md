@@ -1,71 +1,39 @@
-<div align="center">
+## 说明
 
-  <h1><code>wasm-pack-template</code></h1>
+这是一个《形式语言与自动机》课程的实验作业项目，内容是正则语言的各种表示形式之间的转换。
 
-  <strong>A template for kick starting a Rust and WebAssembly project using <a href="https://github.com/rustwasm/wasm-pack">wasm-pack</a>.</strong>
+## 调试或编译
 
-  <p>
-    <a href="https://travis-ci.org/rustwasm/wasm-pack-template"><img src="https://img.shields.io/travis/rustwasm/wasm-pack-template.svg?style=flat-square" alt="Build Status" /></a>
-  </p>
+这是一个rust项目，所以你需要安装 rust 工具链。
 
-  <h3>
-    <a href="https://rustwasm.github.io/docs/wasm-pack/tutorials/npm-browser-packages/index.html">Tutorial</a>
-    <span> | </span>
-    <a href="https://discordapp.com/channels/442252698964721669/443151097398296587">Chat</a>
-  </h3>
+[按照这些说明安装 rust 工具链](https://www.rust-lang.org/zh-CN/tools/install) 。
 
-  <sub>Built with 🦀🕸 by <a href="https://rustwasm.github.io/">The Rust and WebAssembly Working Group</a></sub>
-</div>
+### 本地调试
 
-## About
+在 scr 目录新建一个 main.rs 文件，写入：
+```rust
+use wasm-fa::{dfa, nfa};
 
-[**📚 Read this template tutorial! 📚**][template-docs]
-
-This template is designed for compiling Rust libraries into WebAssembly and
-publishing the resulting package to NPM.
-
-Be sure to check out [other `wasm-pack` tutorials online][tutorials] for other
-templates and usages of `wasm-pack`.
-
-[tutorials]: https://rustwasm.github.io/docs/wasm-pack/tutorials/index.html
-[template-docs]: https://rustwasm.github.io/docs/wasm-pack/tutorials/npm-browser-packages/index.html
-
-## 🚴 Usage
-
-### 🐑 Use `cargo generate` to Clone this Template
-
-[Learn more about `cargo generate` here.](https://github.com/ashleygwilliams/cargo-generate)
-
+fn main() {
+  // 在这里写调试代码
+}
 ```
-cargo generate --git https://github.com/rustwasm/wasm-pack-template.git --name my-project
-cd my-project
-```
+即可在 main.rs 内写调试的代码。
 
-### 🛠️ Build with `wasm-pack build`
+运行 `cargo doc --open` 来查看api文档。
+
+### 编译为 WebAssembly 模块
+
+先安装用于构建、测试和发布rust生成的WebAssembly的集成工具 [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/) 。
+
+然后运行：
 
 ```
 wasm-pack build
 ```
+即可在pkg目录找到构建完成的 WebAssembly 模块。
 
-### 🔬 Test in Headless Browsers with `wasm-pack test`
-
-```
-wasm-pack test --headless --firefox
-```
-
-### 🎁 Publish to NPM with `wasm-pack publish`
-
-```
-wasm-pack publish
-```
-
-## 🔋 Batteries Included
-
-* [`wasm-bindgen`](https://github.com/rustwasm/wasm-bindgen) for communicating
-  between WebAssembly and JavaScript.
-* [`console_error_panic_hook`](https://github.com/rustwasm/console_error_panic_hook)
-  for logging panic messages to the developer console.
-* `LICENSE-APACHE` and `LICENSE-MIT`: most Rust projects are licensed this way, so these are included for you
+www 目录是一个使用这个模块的网页的示例。阅读这个目录内的 readme.md 可找到如何启动这个网页。
 
 ## License
 
@@ -75,10 +43,3 @@ Licensed under either of
 * MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
 
 at your option.
-
-### Contribution
-
-Unless you explicitly state otherwise, any contribution intentionally
-submitted for inclusion in the work by you, as defined in the Apache-2.0
-license, shall be dual licensed as above, without any additional terms or
-conditions.
