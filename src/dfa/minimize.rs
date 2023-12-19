@@ -64,6 +64,7 @@ fn order_pair(state1: StateId, state2: StateId) -> (StateId, StateId) {
     }
 }
 
+/// 不可区分状态组集合。
 #[derive(Debug)]
 pub struct IndistinGroups {
     groups: Vec<HashSet<StateId>>,
@@ -105,22 +106,28 @@ impl IndistinGroups {
         }
     }
 
+    /// 不可区分状态组的数量。
     pub fn num_of_groups(&self) -> usize {
         self.groups.len()
     }
 
+    /// 本集合中的不可区分状态的数量。
     pub fn num_of_indistin_states(&self) -> usize {
         self.groups.iter().map(|group| group.len()).sum()
     }
 
+    /// 给定一个状态id，如果它是一个不可区分状态，那么返回它所在的组的索引。如果不是，返回None。
     pub fn contains_at(&self, state: StateId) -> Option<usize> {
         self.groups.iter().position(|group| group.contains(&state))
     }
 
+    /// 不可区分状态组的迭代器。
     pub fn iter(&self) -> impl Iterator<Item = &HashSet<StateId>> {
         self.groups.iter()
     }
 
+    /// 重映射状态id。
+    /// 
     /// 假设↓指向一组不可区分状态，⇓指向另一组不可区分状态，x代表一个状态，
     /// 
     /// 在remap之前，状态列表的分布是：

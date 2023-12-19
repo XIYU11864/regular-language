@@ -3,7 +3,9 @@ use itertools::Itertools;
 use std::collections::{HashMap, HashSet};
 use std::fmt;
 
-pub mod edge;
+mod edge;
+
+/// DFA的极小化相关的方法。
 pub mod minimize;
 
 /// 传入一个集合的索引的子集，返回一个无符号数来*表示*这个子集。
@@ -127,7 +129,7 @@ impl Alphabet for Vec<u8> {
     }
 }
 
-/// 稀疏DFA，用HashMap实现。
+/// 稀疏DFA。
 /// 01的意思是这个DFA的字母表只有0和1，适用于大作业给的测试用例。
 pub struct DFA01 {
     states: HashMap<StateId, State01>,
@@ -137,6 +139,7 @@ pub struct DFA01 {
 }
 
 impl DFA01 {
+    /// 获取这个DFA的所有状态的迭代器，并且迭代顺序按照状态编号排序。
     pub fn states_iter(&self) -> impl Iterator<Item = &State01> {
         self.states
             .iter()
@@ -144,11 +147,12 @@ impl DFA01 {
             .map(|entry| entry.1)
     }
 
+    /// 获取这个DFA的所有状态和其编号的迭代器，并且迭代顺序按照状态编号排序。
     pub fn states_with_id_iter(&self) -> impl Iterator<Item = (&StateId, &State01)> {
         self.states.iter().sorted_by_key(|entry| entry.0)
     }
 
-    // 不知道为什么不能直接用to_dot()，在这包装一下。
+    /// 将状态转移表转化为DOT格式的状态转移图。
     pub fn call_to_dot(&self) -> String {
         self.to_dot()
     }
@@ -178,6 +182,7 @@ impl DFA01 {
 }
 
 impl DFA01 {
+    /// 从NFA构造DFA。
     pub fn build_dfa_from_nfa(nfa: &NFA) -> Self {
         let nfa_state_set_len = nfa.get_states_iter().len();
         if nfa_state_set_len > 128 {
@@ -344,6 +349,7 @@ impl SparseDFA for DFA01 {
 }
 
 impl CompletedDfa for DFA01 {
+    /// 由于这个DFA的字母表只有0和1，所以直接用一个有两个元素的元组来表示字母表。
     type Alphabet = (u8, u8);
     fn alphabet(&self) -> &Self::Alphabet {
         &self.alphabet
@@ -398,6 +404,7 @@ trait State {
     fn transitions(&self) -> Self::Transitions;
 }
 
+/// 用于表示`DFA01`这个结构体的状态。
 pub struct State01 {
     zero_to: StateId,
     one_to: StateId,
@@ -437,7 +444,7 @@ impl State for State01 {
 /// 一份 `out_transitions` 以出发状态为索引，称为“出表”；
 /// 一份 `in_transitions` 以到达状态为索引，称为“入表”。
 ///
-/// 本来一份表就够了，多加一个入表是为了方便之后使用DFA构造正则表达式。
+/// 本来感觉多储存一份入表可以方便之后使用DFA构造正则表达式，但实际上好像没什么帮助。暂时没有删除。
 pub struct DenseDFA {
     alphabet: Vec<u8>,
     out_transitions: Transisions<StateId>,
@@ -470,6 +477,7 @@ impl DenseDFA {
 }
 
 impl CompletedDfa for DenseDFA {
+    /// 使用一个Vec来表示字母表。不用HashSet的原因是需要字母表是有序的。
     type Alphabet = Vec<u8>;
 
     fn number_of_states(&self) -> StateId {
@@ -656,6 +664,7 @@ impl DenseDFA {
         self.accept_states.clear();
     }
 
+    /// 从稀疏DFA构造稠密DFA。
     pub fn build_from_sparse01_dfa(sparse_dfa: &DFA01) -> Self {
         let config = DfaConfig::new_from_01(sparse_dfa);
         let mut dense_dfa = Self::init_with_config(&config);
@@ -702,6 +711,7 @@ impl DenseDFA {
         rg
     }
 
+    /// 将状态转移表转化为DOT语言表示的状态转移图。
     pub fn call_to_dot(&self) -> String {
         self.to_dot()
     }
@@ -765,11 +775,6 @@ impl fmt::Display for DenseDFA {
     }
 }
 
-pub fn print_dfa<D: CompletedDfa>(dfa: &D) {
-    let output = dfa.to_fmt_output();
-
-    println!("{}", output);
-}
 
 /// 输入字符可以是任意ASCII码的稀疏DFA的状态。
 ///

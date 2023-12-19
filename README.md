@@ -20,7 +20,7 @@ fn main() {
 ```
 即可在 main.rs 内写调试的代码。
 
-运行 `cargo doc --open` 来查看api文档。
+运行 `cargo doc` 就可在在 `target/doc` 目录下查看api文档。
 
 ### 编译为 WebAssembly 模块
 
@@ -33,7 +33,7 @@ wasm-pack build
 ```
 即可在pkg目录找到构建完成的 WebAssembly 模块。
 
-www 目录是一个使用这个模块的网页的示例。阅读这个目录内的 readme.md 可找到如何启动这个网页。
+[www](https://github.com/XIYU11864/fa-wab) 目录是一个使用这个模块的网页的示例。阅读这个目录内的 readme.md 可找到如何启动这个网页。
 
 ## License
 

@@ -13,6 +13,7 @@ use regex_syntax::{
 // 从一开始就不应该使用u32作为状态索引，应该使用usize，这样就不会有这种麻烦了。
 type StateId = u32;
 
+/// 表示一个NFA的结构体。
 #[derive(Debug)]
 pub struct NFA {
     states: Vec<State>,
@@ -23,6 +24,7 @@ pub struct NFA {
 
 /// NFA内的状态的增删改查
 impl NFA {
+    /// 创建一个空的NFA。
     pub fn init_empty() -> NFA {
         NFA {
             states: Vec::new(),
@@ -32,6 +34,7 @@ impl NFA {
         }
     }
 
+    /// 将给定的状态添加到本NFA中。
     pub fn add_state(&mut self, state: State) -> StateId {
         let id = self.states.len() as StateId;
         self.states.push(state);
@@ -58,6 +61,7 @@ impl NFA {
         self.add_state(State::new_final())
     }
 
+    /// 添加一个非空的状态转移函数。
     pub fn add_transition(&mut self, from: StateId, input: u8, to: StateId) {
         if let State::NonEpsilon(trans) = &mut self.states[from as usize] {
             trans.0.push((input, to));
@@ -71,6 +75,7 @@ impl NFA {
         self.alphabet.insert(input);
     }
 
+    /// 添加一个空转移函数。
     pub fn add_epsilon_transition(&mut self, from: StateId, to: StateId) {
         if let State::Epsilon(trans) = &mut self.states[from as usize] {
             trans.0.push(to);
@@ -82,22 +87,27 @@ impl NFA {
         }
     }
 
+    /// 设置开始状态。
     pub fn set_start_state(&mut self, state: StateId) {
         self.start_state = Some(state);
     }
 
+    /// 设置接收状态。
     pub fn set_accept_state(&mut self, state: StateId) {
         self.accept_states.push(state);
     }
 
+    /// 清空接收状态。
     pub fn reset_accept_states(&mut self) {
         self.accept_states.clear();
     }
 
+    /// 返回本NFA内的所有状态组成的迭代器。
     pub fn get_states_iter(&self) -> std::slice::Iter<State> {
         self.states.iter()
     }
 
+    /// 获得字母表。
     pub fn alphabet(&self) -> &HashSet<u8> {
         &self.alphabet
     }
@@ -105,11 +115,11 @@ impl NFA {
 
 /// 状态和转移的计算相关方法
 impl NFA {
-    /// 为了消除构造过程中产生的不必要的空转移，我们需要知道一个状态的入集。
+    /// ~~为了消除构造过程中产生的不必要的空转移，我们需要知道一个状态的入集。~~
     ///
-    /// 本函数通过搜索整个NFA来获得一个状态的入集。
+    /// ~~本函数通过搜索整个NFA来获得一个状态的入集。
     /// 返回值是两个Vec，第一个代表能通过空转移来到此状态的状态集，第二个代表通过非空转移来到此状态的状态集。
-    /// 我的NFA是结构像个单向链表，所以为了获得一个状态的入集（前导），需要遍历整个NFA。
+    /// 我的NFA是结构像个单向链表，所以为了获得一个状态的入集（前导），需要遍历整个NFA。~~
     ///
     /// 我找到了不需要搜索入集也能消除不必要的状态的算法，所以这个函数目前不需要使用，太好了。
     fn search_inset_of_state(&self, state: StateId) -> (Vec<StateId>, Vec<(StateId, u8)>) {
@@ -134,24 +144,13 @@ impl NFA {
         }
         (epsilon_from, non_epsilon_from)
 
-        // 注意，有另一个办法不需要遍历整个状态集合也能搜索入集。但是需要重构NFA的数据结构。
-        //
         // 令状态转移函数不再储存于状态中，而是全部存放在一个总的Vec里。
         // 这个大Vec的元素是 `(u8, StateId)` ，也就是一个状态转移函数。
         // 如何知道转移函数的起始状态呢？把整个Vec看做一个个长度相等的片段，每个片段的长度等于NFA的字母表的长度。
         // 每一个片段相当于储存了某个特定状态的状态转移表。
-        // 这样当我们需要搜索一个状态的入集，就可以用“跳步”的方法来访问这个大Vec。
-        // 每次访问都跨越字母表的大小个长度。这样只需要O(n)复杂度即可找到一个状态的入集，n是NFA中的状态数量。
-        // 而对于当前使用的结构，这个复杂度最坏是O(n^2)。
-        //
-        // 这个结构的缺点是一个输入字符只能记录一个目标状态。
-        // 但是，教材使用的 thompson 构造法来构造NFA，这个方法不会出现一个输入字符指向多个状态的情况，除非是空转移。
-        // 但同时，这个构造法也使得某个状态要么只包含空转移，要么只包含非空转移，所以处理空转移也很方便。
-        //
-        // 由于我们的题目所构造的NFA状态数不会太多，所以暂时就用现在的结构了。
     }
 
-    /// 这个函数的意义是，先求状态的闭包，然后再求从闭包中任意状态发射的所有非空转移。
+    /// 这个函数的作用是，先求状态的闭包，然后再求从闭包中任意状态发射的所有非空转移。
     fn epsilon_closure_and_dalta(&self, state: StateId) -> (Vec<StateId>, HashSet<(u8, u32)>) {
         let mut closure = Vec::new();
         let mut stack = vec![state];
@@ -177,7 +176,7 @@ impl NFA {
         (closure, target)
     }
 
-    /// 本函数的意义是求状态的闭包，但是只返回闭包中的非空状态`State::NonEpsilon`。
+    /// 本函数的作用是求状态的闭包，但是只返回闭包中的非空状态`State::NonEpsilon`。
     fn epsilon_closure_to_non_epsilon(&self, state: StateId) -> HashSet<StateId> {
         let mut closure = HashSet::new();
         let mut stack = vec![state];
@@ -309,7 +308,7 @@ impl NFA {
         //     .collect::<Vec<StateId>>();
         // 最后状态列表中应该有一个陷阱状态，一个接收状态，其他都是非空转移状态。
 
-        // 最后状态列表中应该只有一个接收状态，其他都是非空转移状态。
+        // 上面这些注释掉的代码不需要了。最后状态列表中应该只有一个接收状态，其他都是非空转移状态。
     }
 
     fn remap_trans(&mut self, state: StateId, map: &Vec<Option<StateId>>) {
@@ -346,10 +345,10 @@ impl NFA {
     }
 }
 
-/// 格式化相关方法
+/// 格式化输出相关方法
 impl NFA {
-    // 此方法由copilot生成，👍
-    // 生成dot文件，可以由graphviz生成状态机图
+    /// 此方法由copilot生成，👍
+    /// 生成dot文件，可以由graphviz生成状态机图
     pub fn to_dot(&self) -> String {
         let mut dot = String::new();
         dot.push_str("digraph {\n");
@@ -384,12 +383,15 @@ impl NFA {
     }
 }
 
-/// NFA的状态类型，有三种：
+/// NFA的状态。
+/// 
+/// 有四种类型：
 /// 1. Epsilon，只能添加空转移的状态。
 /// 2. NonEpsilon，只能添加非空转移的状态。
-/// 3. NoWayOut，没有出路的状态。
+/// 3. Fail，陷阱状态。
+/// 4. Final，接收状态。
 ///
-/// thompson 构造法构造NFA，状态要么包含空转移，要么包含非空转移，不会同时包含两种转移，因此这么设计是可以的。
+/// 使用教材上的 thompson 构造法构造NFA，状态要么包含空转移，要么包含非空转移，不会同时包含两种转移，因此这么设计是可以的。
 /// 这么做的目的是为了方便后续计算空闭包。
 /// 另外，NoWayOut类状态可以用作接收状态或者陷阱状态。
 #[derive(Debug)]
@@ -397,10 +399,12 @@ pub enum State {
     Epsilon(EpsilonTrans),
     NonEpsilon(NonEpsilonTrans),
 
-    /// 将NoWayOut进一步细化为了两种状态，fail代表陷阱状态，final代表接收状态，方便后续计算。
+    // 区分fail和final是为了方便后续计算。
     Fail,
     Final,
 }
+
+/// 空转移表。
 #[derive(Debug, Clone)]
 pub struct EpsilonTrans(Vec<StateId>);
 
@@ -409,6 +413,8 @@ impl EpsilonTrans {
         self.0.iter()
     }
 }
+
+/// 非空转移表。
 #[derive(Debug, Clone)]
 pub struct NonEpsilonTrans(Vec<(u8, StateId)>);
 
@@ -432,8 +438,11 @@ impl State {
     }
 }
 
-/// NFA的构造器，在这里实现一个visitor，用于遍历正则表达式的语法树。
-/// thompson 构造法构造NFA，有两种思路：
+/// NFA的构造器。
+/// 
+/// 有两个功能，一个是从正则表达式构造NFA，一个是从已有的NFA构造不带空转移的NFA。
+/// 
+/// thompson 构造法从正则表达式构造NFA，有两种思路：
 ///
 /// 1. 自底向上，先构造子NFA，记录每一个子NFA的开始和接受状态，然后把子NFA合并成一个大NFA。
 /// 2. 自顶向下，从AST的根节点开始直接构造NFA，用“空穴”代替子NFA，记录空穴的“来源”和“去路”。构造子NFA时填入空穴。
@@ -441,7 +450,7 @@ impl State {
 /// 这里我用的是第二种思路。一般来说用自底向上方法，递归地构造NFA，比较直观。
 /// 但是如果需要构造的NFA很大，例如AST深度达到1000层以上，递归函数的调用栈可能会溢出。
 /// 所以尝试使用自顶向下的方法，用栈来辅助NFA的构造过程。
-/// 虽然这样会严重降低代码的可读性，但其实也不会有人看我的代码。
+/// 这样会部分降低代码的可读性。
 pub struct Builder {
     nfa: NFA,
     stack: Vec<Hole>,
@@ -458,6 +467,7 @@ enum Hole {
 }
 
 impl Builder {
+    /// 初始化NFA构造器。
     pub fn new() -> Builder {
         Builder {
             nfa: NFA::init_empty(),
@@ -465,6 +475,7 @@ impl Builder {
         }
     }
 
+    /// 从正则表达式构造NFA。
     pub fn build_nfa_from_re(mut self, re: &String) -> Result<NFA, String> {
         let hir = ParserBuilder::new()
             .unicode(false)
@@ -560,6 +571,12 @@ impl Builder {
     }
 }
 
+/// 实现正则语法树的Visitor trait。
+/// 
+/// regex_syntax包的visit方法会深度优先地遍历AST，每访问一个节点，就会调用visit_pre方法。
+/// 访问完一个节点的所有子节点之后，会调用visit_post方法。
+/// 
+/// 完成遍历后，会调用finish方法，返回构造结果。
 impl regex_syntax::hir::Visitor for Builder {
     type Output = NFA;
     type Err = String;
