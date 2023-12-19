@@ -34,7 +34,8 @@ pub fn get_ans(input: &str) -> String {
     let dfa = re_to_dfa(input);
     let ans = dfa.to_string();
     let rg = dfa.to_rg();
-    format!("{}@{}", ans, rg)
+    let dot = dfa.call_to_dot();
+    format!("{}@{}@{}", ans, rg, dot)
 }
 
 /// 将正则表达式转化为极小化DFA。
