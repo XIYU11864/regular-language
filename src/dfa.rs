@@ -190,10 +190,12 @@ impl DFA01 {
         }
 
         let alphabet = nfa.alphabet();
-        if alphabet.len() == 2 && alphabet.contains(&b'0') && alphabet.contains(&b'1') {
+        if (alphabet.len() == 2 && alphabet.contains(&b'0') && alphabet.contains(&b'1'))
+            || (alphabet.len() == 1 && (alphabet.contains(&b'0') || alphabet.contains(&b'1')))
+        {
             // 检查这个NFA的字母表是否只有0和1。
         } else {
-            panic!("alphabet is not {{'0','1'}}");
+            panic!("alphabet is not ['0','1']");
         }
 
         trait ToDfaStateID {
@@ -774,7 +776,6 @@ impl fmt::Display for DenseDFA {
         write!(f, "{}", self.to_fmt_output())
     }
 }
-
 
 /// 输入字符可以是任意ASCII码的稀疏DFA的状态。
 ///
