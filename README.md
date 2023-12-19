@@ -12,7 +12,7 @@
 
 在 scr 目录新建一个 main.rs 文件，写入：
 ```rust
-use wasm-fa::{dfa, nfa};
+use wasm_fa::{dfa, nfa};
 
 fn main() {
   // 在这里写调试代码
