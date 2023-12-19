@@ -506,6 +506,8 @@ impl Builder {
     pub fn build_non_epsilon_nfa(mut self, old_nfa: &NFA) -> Result<NFA, String> {
         // 第一步，将状态转移函数dalta转换成dalta_hat
 
+        
+
         // 首先将原NFA中的状态全部添加到新NFA中。
         for state_id in 0..old_nfa.states.len() {
             let trans = old_nfa.get_dalta_hat_transitions(state_id as StateId);
@@ -539,8 +541,16 @@ impl Builder {
             }
         }
 
-        self.nfa.set_start_state(old_nfa.start_state.unwrap());
-        self.nfa.set_accept_state(old_nfa.accept_states[0]);
+        let old_start = old_nfa.start_state.unwrap();
+        let old_accept = old_nfa.accept_states[0];
+        
+        self.nfa.set_start_state(old_start);
+        self.nfa.set_accept_state(old_accept);
+
+        let (closuer, _) = old_nfa.epsilon_closure_and_dalta(old_start);
+        if closuer.contains(&old_accept) {
+            self.nfa.set_accept_state(old_start);
+        }
 
         // 下一步删除不可达状态
         for unreachable_state_id in self.nfa.search_unreachable_states() {

@@ -296,10 +296,10 @@ impl DFA01 {
         }
         // 标记接受状态
         for id in dfa.states.keys() {
-            // 因为NFA的构造方法，我们知道NFA只有一个接受状态。
-            // 如果要将更普遍的NFA转化为DFA，这里需要修改。
-            if *id & nfa.accept_states[0].to_dfa_state_id() != 0 {
-                dfa.accept_states.insert(*id);
+            for accept in nfa.accept_states.iter() {
+                if *id & accept.to_dfa_state_id() != 0 {
+                    dfa.accept_states.insert(*id);
+                }
             }
         }
         dfa
